@@ -7,6 +7,8 @@
 #              for squares that are empty.
 
 
+import Board
+
 class ChessVar:
     """Contains functions that are able to run a special variant of chess, keep track
     of the board, and decide when someone wins the game. Works with all of the piece classes,
@@ -63,6 +65,9 @@ class ChessVar:
         self.update_player_turn()
 
         return True
+    
+    def set_game_state(self, state):
+        self._game_state = state
 
     def search_square(self, square):
         """Takes a square and returns the object type that is currently there."""

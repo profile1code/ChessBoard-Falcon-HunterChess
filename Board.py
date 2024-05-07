@@ -11,11 +11,13 @@ import time
 
 
 # Constants / Setup
-screen_width = 1800
+screen_width = 1200
 screen_height = int(screen_width * 9 / 16)
 
 fps = 120
 clock = pygame.time.Clock()
+
+timer = 300
 
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Falcon-Hunter Chess')
@@ -25,6 +27,10 @@ white_square_color = (240, 240, 200)
 falcon_hunter_rectangle_color = (150, 200, 255)
 
 ratio = screen_width / 16
+
+chess_game = None
+white_timer = None
+black_timer = None
 
 
 def main():
@@ -46,16 +52,20 @@ def main():
 
     time_of_last_frame = 0
 
-    white_timer = 300
-    black_timer = 300
+    white_timer = timer
+    black_timer = timer
+
+    start = False
 
     while run:
         # Takes a list of events
         for event in pygame.event.get():
             # Checks whether the X in the top right is clicked
+
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
+                start = True
                 mouse_position = find_square_from_mouse()   
                 if len(mouse_position) == 2:    
                     initial_square = find_square_from_mouse()
@@ -84,17 +94,36 @@ def main():
                 selected_piece = None
                 initial_square = None
 
+        if white_timer <= 0:
+            chess_game.set_game_state('BLACK_WON')
+        elif black_timer <= 0: 
+            chess_game.set_game_state('WHITE_WON')
+
         if chess_game.get_game_state() is not 'UNFINISHED':
             player_wins(chess_game)
+            white_timer = timer
+            black_timer = timer
+            chess_game = ChessVar.ChessVar()
+            start = False
         else:
             draw_board(chess_game, selected_piece)
+            white_timer_save = white_timer
+            black_timer_save = black_timer
+            time_of_last_frame, white_timer, black_timer = manage_timers(chess_game._player_turn, time_of_last_frame, white_timer, black_timer)
+            if not start:
+                white_timer = white_timer_save
+                black_timer = black_timer
+            
+            clock.tick(fps)
 
-        time_of_last_frame, white_timer, black_timer = manage_timers(chess_game._player_turn, time_of_last_frame, white_timer, black_timer)
+        # Timers are rendered in the function
+        
         pygame.display.update()
-        clock.tick(fps)
+        
 
     pygame.quit()
     
+
 
 def draw_board(chess_game, selected_piece=None):
     screen.fill((0, 0, 0))
@@ -196,6 +225,28 @@ def get_square_location(row, column):
     return (x, y)
 
 def player_wins(game):
+    winner = game.get_game_state()
+    make_rectangle_with_border((screen_width / 2) - ratio * 4, (screen_height / 2) - ratio * 3, ratio * 8, ratio * 6, 15, (30, 30, 30), (255, 255, 255))
+    
+    button_list = []
+    button_list.append(make_basic_button((screen_width / 2) - ratio * 2, (screen_height / 2) - 2 * ratio, ratio * 4, ratio * 2, 'PLAY AGAIN'))
+    button_list.append(make_basic_button((screen_width / 2) - ratio * 2, (screen_height / 2) - 0 * ratio, ratio * 4, ratio * 2, 'QUIT'))
+    run = True
+    
+    while run:
+        for event in pygame.event.get():
+            # Checks whether the X in the top right is clicked
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_position = find_menu_mouse_position(button_list)
+                if mouse_position == 'QUIT':
+                    pygame.quit()
+                elif mouse_position == 'PLAY AGAIN':
+                    run = False  
+        
+        pygame.display.update()
+    print('Through')
     screen.fill((0, 0, 0))
 
 def make_image(color, code):
@@ -232,6 +283,31 @@ def manage_timers(player_turn, time_of_last_frame, white_timer, black_timer):
         black_timer -= time_since_last_frame / 1000
 
     return pygame.time.get_ticks(), white_timer, black_timer
+
+
+def make_rectangle_with_border(x, y, x_width, y_width, width, inside_color, border_color):
+    rectangle = pygame.Rect(x, y, x_width, y_width)
+    border = pygame.Rect(x - width, y - width, x_width + 2 * width, y_width + 2 * width)
+    pygame.draw.rect(screen, border_color, border)
+    pygame.draw.rect(screen, inside_color, rectangle)
+
+def make_basic_button(x, y, x_width, y_width, text):
+    make_rectangle_with_border(x, y, x_width, y_width, 5, (50, 50, 50), (255, 255, 255))
+    font_size = min(int(x_width / 4.8), int(y_width / 3))
+    font = pygame.font.SysFont('Aerial', font_size)
+    text_surface = font.render(text, False, (255, 255, 255))
+    text_rect = text_surface.get_rect(center = (x + (x_width / 2), y + (y_width / 2)))
+    screen.blit(text_surface, text_rect)
+    return x, y, x_width, y_width, text
+
+def find_menu_mouse_position(button_info):
+    x_pos, y_pos = pygame.mouse.get_pos()
+    for button in button_info:
+        x, y, x_width, y_width, text = button
+        if x <= x_pos <= x + x_width:
+            if y <= y_pos <= y + y_width:
+                return text
+    return None
 
 if __name__ == '__main__':
     main()
