@@ -126,6 +126,7 @@ def main():
 
 
 def draw_board(chess_game, selected_piece=None):
+    """Draws the board of the given game and information"""
     screen.fill((0, 0, 0))
 
     board = chess_game._board
@@ -225,7 +226,11 @@ def get_square_location(row, column):
     return (x, y)
 
 def player_wins(game):
+    """Handles behavior when the game finishes and is won by a player."""
+
+    # Add winner screen at some point
     winner = game.get_game_state()
+
     make_rectangle_with_border((screen_width / 2) - ratio * 4, (screen_height / 2) - ratio * 3, ratio * 8, ratio * 6, 15, (30, 30, 30), (255, 255, 255))
     
     button_list = []
@@ -292,6 +297,8 @@ def make_rectangle_with_border(x, y, x_width, y_width, width, inside_color, bord
     pygame.draw.rect(screen, inside_color, rectangle)
 
 def make_basic_button(x, y, x_width, y_width, text):
+    """Draws a button with the given dimensions and text"""
+    # Hacky solution that works for now
     make_rectangle_with_border(x, y, x_width, y_width, 5, (50, 50, 50), (255, 255, 255))
     font_size = min(int(x_width / 4.8), int(y_width / 3))
     font = pygame.font.SysFont('Aerial', font_size)
@@ -301,6 +308,8 @@ def make_basic_button(x, y, x_width, y_width, text):
     return x, y, x_width, y_width, text
 
 def find_menu_mouse_position(button_info):
+    """Finds which button the mouse is one for the menu screen"""
+    # Probably a much better solution for the future
     x_pos, y_pos = pygame.mouse.get_pos()
     for button in button_info:
         x, y, x_width, y_width, text = button

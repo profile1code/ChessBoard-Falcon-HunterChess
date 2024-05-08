@@ -7,7 +7,7 @@
 #              for squares that are empty.
 
 
-import Board
+# This was not originally designed to have a visible board attached to it
 
 class ChessVar:
     """Contains functions that are able to run a special variant of chess, keep track
